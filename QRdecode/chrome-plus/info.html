@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+</head>
+<style>
+    body {
+        font: 14px Arial;
+    }
+    
+    h1 {
+        margin: 30px 0 5px 0;
+        padding: 0;
+    }
+    
+    table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 15px 0;
+    }
+    
+    td, th {
+        padding: 4px;
+        word-break: break-all;
+    }
+    
+    th {
+        text-align: left;
+        width: 130px;
+    }
+    
+    tr {
+        display: block;
+    }
+    
+    #thumbnail {
+        float: left;
+        -webkit-box-shadow: 1px 1px 6px #000;
+        border: 4px solid #fff;
+        background: #fff;
+        max-width: 100px;
+    }
+    
+    #fileDragArea {
+        display: none;
+        float: left;
+        border: 5px solid #999;
+        height: 98px;
+        width: 348px;
+        margin-left: 10px;
+    }
+    
+    .small {
+        font-size: 12px;
+        color: #999;
+    }
+    
+    .erro {
+        color: red;
+    }
+    
+    tr:nth-child(odd) {
+            background: #eee;
+        }            
+</style>
+</head>
+<body>
+    <h1>二维码解码 <span class="small">by <a class="small" href="http://xiaoqiang.org" target="_blank">xiaoqiang.org</a></span></h1>
+    <canvas id="thumbnail">
+    </canvas>
+    <div id="fileDragArea">
+        拖动二维码图片到本区域或者点击<input id="input" type="file" />
+    </div>
+    <div style="clear:left;">
+    </div>
+    <table>
+        <tr>
+            <th>
+                二维码URL
+            </th>
+            <td id="url">
+            </td>
+        </tr>
+        <tr>
+            <th>
+                二维码信息
+            </th>
+            <td id="decode">
+                解码中...
+            </td>
+        </tr>
+    </table>
+    <script>
+        var imageUrl = window.location.hash.substring(1), QRdecode = {
+            $$: function(s){
+                return document.querySelector(s);
+            },
+            $: function(id){
+                return document.getElementById(id);
+            },
+            showinfo: function(text){
+                var reg = /((http|ftp|https|file):\/\/([\w\-]+\.)+[\w\-]+(\/[\w\u4e00-\u9fa5\-\.\/?\@\%\!\&=\+\~\:\#\;\,\|\$]*)?)/ig;
+                text = text.replace(reg, function(m){
+                    return '<a href="' + m + '" target="_blank">' + m + '</a>';
+                });
+                this.$$('#decode').innerHTML = text;
+            },
+            decode: function(url){
+                var that = this, http = new XMLHttpRequest(), _url = 'http://node.xiaoqiang.org/decode/', _param = 'img=' + encodeURIComponent(url);
+                this.$$('#decode').innerHTML = "解码中...";
+                http.open('POST', _url, true);
+                http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                http.onreadystatechange = function(){
+                    if (http.readyState == 4 && http.status == 200) {
+                        that.showinfo(http.responseText);
+                    }
+                }
+                http.send(_param);
+            },
+            renderUrl: function(url){
+                var divurl = this.$$('#url');
+                var anchor = '<a href="' + url + '">' + url + '</a>';
+                divurl.innerHTML = anchor;
+            },
+            renderImg: function(url){
+                var canvas = this.$$('#thumbnail');
+                var context = canvas.getContext('2d');
+                
+                canvas.width = 100;
+                canvas.height = 100;
+                
+                var image = new Image();
+                image.addEventListener('load', function(){
+                    var src_w = image.width, src_h = image.height, new_w = canvas.width, new_h = canvas.height, ratio = src_w / src_h;
+                    if (src_w > src_h) {
+                        new_h /= ratio;
+                    }
+                    else {
+                        new_w *= ratio;
+                    }
+                    canvas.width = new_w;
+                    canvas.height = new_h;
+                    context.drawImage(image, 0, 0, src_w, src_h, 0, 0, new_w, new_h);
+                });
+                image.src = url;
+            },
+            dragenter: function(e){
+                e.stopPropagation();
+                e.preventDefault();
+            },
+            dragover: function(e){
+                e.stopPropagation();
+                e.preventDefault();
+            },
+            drop: function(e){
+                e.stopPropagation();
+                e.preventDefault();
+                var dt = e.dataTransfer, file = dt.files[0];
+                this.readFile(file);
+            },
+            handleFiles: function(file){
+                this.readFile(file);
+            },
+            readFile: function(file){
+                var that = this, imageType = /image.*/;
+                if (file.type.match(imageType)) {
+                    var reader = new FileReader(), data;
+                    reader.onload = function(e){
+                        that.decode(e.target.result);
+                        that.renderUrl(e.target.result)
+                        that.renderImg(e.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                }
+                else {
+                    alert("请上传二维码图片！");
+                }
+                
+            },
+            initDrop: function(){
+                var that = this, dropbox = this.$('fileDragArea'), inputElement = this.$('input');
+                dropbox.addEventListener('dragenter', function(e){
+                    that.dragenter.call(that, e);
+                }, false);
+                dropbox.addEventListener('dragover', function(e){
+                    that.dragover.call(that, e);
+                }, false);
+                dropbox.addEventListener('drop', function(e){
+                    that.drop.call(that, e);
+                }, false);
+                inputElement.addEventListener('change', function(){
+                    that.handleFiles.call(that, this.files[0]);
+                }, false);
+            },
+            init: function(url){
+                var reg_file = /^file:/, reg_chrome = /^chrome:/;
+                if (reg_chrome.test(url)) {
+                    this.$$('#fileDragArea').style.display = 'block';
+                    this.$$('#decode').innerHTML = '<span class="erro">请上传二维码图片！</span>';
+                    this.initDrop();
+                }
+                else 
+                    if (reg_file.test(url)) {
+                        this.$$('#fileDragArea').style.display = 'block';
+                        this.$$('#decode').innerHTML = '<span class="erro">本地图片需要手动上传！</span>';
+                        this.initDrop();
+                    }
+                    else {
+                        this.decode(url);
+                        this.renderUrl(url);
+                        this.renderImg(url);
+                    }
+            }
+        };
+        QRdecode.init(imageUrl);
+    </script>
+</body>
+</html>

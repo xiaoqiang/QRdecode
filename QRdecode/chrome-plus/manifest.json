@@ -1,0 +1,23 @@
+{
+    "name" : "二维码在线生成/解码工具",
+    "version" : "1.2.2",
+    "description" : "二维码在线生成/解码 by xiaoqiang.org",  
+    "background_page" : "background.html",
+    "browser_action": {
+        "default_icon": "decode-16.png",
+        "default_title": "生成二维码"
+    },
+    "permissions" : [
+        "browserAction",
+        "contextMenus",
+        "tabs",
+        "http://*/*",
+        "https://*/*"
+    ],
+    "minimum_chrome_version" : "6.0.0.0",
+    "icons" : {
+        "16" : "decode-16.png",
+        "48" : "decode-48.png",
+        "128" : "decode-128.png"
+    }
+}

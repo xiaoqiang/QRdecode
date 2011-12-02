@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+</head>
+<style>
+    body {
+        font: 14px Arial;
+    }
+    
+    h1 {
+        margin: 30px 0 5px 0;
+        padding: 0;
+    }
+    
+    table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 15px 0;
+    }
+    
+    td, th {
+        padding: 4px;
+        word-break: break-all;
+    }
+    
+    th {
+        text-align: left;
+        width: 130px;
+    }
+    
+    tr {
+        display: block;
+    }
+    
+    #thumbnail {
+        -webkit-box-shadow: 1px 1px 6px #000;
+        border: 4px solid #fff;
+        background: #fff;
+    }
+    
+    .small {
+        font-size: 12px;
+        color: #999;
+    }
+    
+    tr:nth-child(odd) {
+        background: #eee;
+    }            
+</style>
+</head>
+<body>
+    <h1>二维码生成 <span class="small">by <a class="small" href="http://xiaoqiang.org" target="_blank">xiaoqiang.org</a></span></h1>
+    <canvas id="thumbnail">
+    </canvas>
+    <table>
+        <tr>
+            <th>
+                二维码URL
+            </th>
+            <td id="url">
+            </td>
+        </tr>
+        <tr>
+            <th>
+                二维码信息
+            </th>
+            <td id="decode">
+            </td>
+        </tr>
+    </table>
+    <script>
+        var imageUrl = 'https://chart.googleapis.com/chart?cht=qr&chs=200x200&choe=UTF-8&chld=L|4&chl=' + window.location.hash.substring(1), QRcode = {
+            $: function(selector){
+                return document.querySelector(selector);
+            },
+            renderText: function(text){
+                var reg = /((http|ftp|https|file):\/\/([\w\-]+\.)+[\w\-]+(\/[\w\u4e00-\u9fa5\-\.\/?\@\%\!\&=\+\~\:\#\;\,\|\$]*)?)/ig;
+                text = text.replace(reg, function(m){
+                    return '<a href="' + m + '" target="_blank">' + m + '</a>';
+                });
+                this.$('#decode').innerHTML = text;
+            },
+            renderUrl: function(url){
+                var divurl = this.$('#url'), anchor = document.createElement('a');
+                anchor.href = url;
+                anchor.innerText = url;
+                divurl.appendChild(anchor);
+            },
+            renderImg: function(url){
+                var canvas = this.$('#thumbnail'), context = canvas.getContext('2d'), image = new Image();
+                canvas.width = 100;
+                canvas.height = 100;
+                
+                image.addEventListener('load', function(){
+                    var src_w = image.width, src_h = image.height, new_w = canvas.width, new_h = canvas.height, ratio = src_w / src_h;
+                    if (src_w > src_h) {
+                        new_h /= ratio;
+                    }
+                    else {
+                        new_w *= ratio;
+                    }
+                    canvas.width = new_w;
+                    canvas.height = new_h;
+                    context.drawImage(image, 0, 0, src_w, src_h, 0, 0, new_w, new_h);
+                }, false);
+                image.src = url;
+                
+            },
+            init: function(url){
+                this.renderText(window.location.hash.substring(1));
+                this.renderUrl(url);
+                this.renderImg(url);
+            }            
+        };
+        QRcode.init(imageUrl);
+    </script>
+</body>
+</html>

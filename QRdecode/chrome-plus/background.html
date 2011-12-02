@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8" />
+    </head>
+    <body>
+        <script>
+            var QRdecode = {
+            
+                decodeHandler: function(){
+                    var that = this;
+                    return function(info, tab){
+                        that.decode(info.srcUrl);
+                    };
+                },
+                codeHandler: function(){
+                    var that = this;
+                    return function(info, tab){
+                        that.code(info.selectionText);
+                    };
+                },
+                decode: function(url){
+                    var url = 'info.html#' + url;
+                    chrome.windows.create({
+                        url: url,
+                        width: 520,
+                        height: 400,
+                        'type': 'popup'
+                    });
+                },
+                code: function(text){
+                    var text = encodeURIComponent(text);
+                    if (text.length > 1996) {
+                        text = text.substring(0, 1995);
+                        text = toURI(text);
+                    }
+                    var url = 'cinfo.html#' + text;
+                    chrome.windows.create({
+                        url: url,
+                        width: 520,
+                        height: 400,
+                        'type': 'popup'
+                    });
+                },
+                toURI: function(txt){
+                    var n = txt.lastIndexOf('%'), t = txt.substring(0, n);
+                    try {
+                        decodeURIComponent(t);
+                        return t;
+                    } 
+                    catch (err) {
+                        return this.toURI(t);
+                    }
+                },
+                urlEncode: function(tab){
+                    var reg_chrome = /^chrome:/;
+                    if (reg_chrome.test(tab.url)) {
+                        this.decode(tab.url);
+                    }
+                    else {
+                        this.code(tab.url);
+                    }
+                },
+                init: function(){
+                    var that = this;
+                    chrome.contextMenus.create({
+                        "title": "二维码解码",
+                        "type": "normal",
+                        "contexts": ["image"],
+                        "onclick": that.decodeHandler()
+                    });
+                    chrome.contextMenus.create({
+                        "title": "将\"%s\"生成二维码",
+                        "type": "normal",
+                        "contexts": ["selection"],
+                        "onclick": that.codeHandler()
+                    });
+                    chrome.browserAction.onClicked.addListener(function( tab ) {                        
+                        that.urlEncode.call( that ,tab )
+                    });
+                }
+            };
+            QRdecode.init();
+        </script>
+    </body>
+</html>
