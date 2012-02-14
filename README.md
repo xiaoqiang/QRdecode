@@ -12,4 +12,4 @@
 1，添加工具图标，点击图标，当前URL直接生成二维码；2，添加本地文件解码功能，将本地文件拖到浏览器中，右击弹出解码界面，由于浏览器的安全机制，必须手工拖动或者上传图片，方可解码；
 [在线安装](http://www.xiaoqiang.org/demo/decode/QRdecode.crx)
 [项目地址](http://node.xiaoqiang.org)
-[github地址](https://github.com/xiaoqiang/QRcode-decode-for-chrome)
+[github地址](https://github.com/xiaoqiang/QRdecode)
